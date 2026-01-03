@@ -21,7 +21,7 @@ A powerful, fast, and reliable remote deployment tool for modern applications. D
 
 ```bash
 git clone https://github.com/chihqiang/depctl.git
-cd depctl&& go build -o depctl
+cd depctl && go build -o depctl
 ```
 
 ## Quick Start
