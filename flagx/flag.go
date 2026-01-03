@@ -15,11 +15,10 @@ const (
 )
 
 const (
-	FlagDir      = "dir"
-	FlagVersion  = "version"
-	FlagInclude  = "include"
-	FlagExclude  = "exclude"
-	FlagLocalCmd = "local-cmd"
+	FlagDir     = "dir"
+	FlagVersion = "version"
+	FlagInclude = "include"
+	FlagExclude = "exclude"
 
 	FlagHosts      = "hosts"
 	FlagKey        = "key"
@@ -65,10 +64,6 @@ func PublishFlags() []cli.Flag {
 		&cli.StringSliceFlag{
 			Name:  FlagExclude,
 			Usage: "Files or directories to exclude when packaging, relative to --dir",
-		},
-		&cli.StringFlag{
-			Name:  FlagLocalCmd,
-			Usage: "Local command to execute (optional)",
 		},
 	}
 }

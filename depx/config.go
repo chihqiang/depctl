@@ -9,7 +9,6 @@ import (
 type Config struct {
 	Dir         string   `yaml:"dir"`         // Deployment root directory (local or remote path)
 	Version     string   `yaml:"version"`     // Deployment version number, for example v1.0.0 or 20260102153000
-	LocalCmd    string   `yaml:"localCmd"`    // Command to execute locally, optional
 	Include     []string `yaml:"include"`     // List of files or directories to include
 	Exclude     []string `yaml:"exclude"`     // List of files or directories to exclude
 	RemoteRepo  string   `yaml:"remoteRepo"`  // Directory for storing remote versions, for example /data/app/releases
