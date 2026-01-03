@@ -10,11 +10,16 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+var (
+	version = "main"
+)
+
 func main() {
 	app := &cli.Command{
-		Name:  "depctl",
-		Usage: "Push it, roll it, own it",
-		Flags: flagx.SSHFlags(),
+		Name:    "depctl",
+		Usage:   "Push it, roll it, own it",
+		Version: version,
+		Flags:   flagx.SSHFlags(),
 		Commands: []*cli.Command{
 			cmdx.Publish(),
 			cmdx.History(),
@@ -22,7 +27,7 @@ func main() {
 		},
 	}
 	if err := app.Run(context.Background(), os.Args); err != nil {
-		logx.Error("%v", err)
+		logx.Error("%+v", err)
 		os.Exit(1)
 	}
 }
