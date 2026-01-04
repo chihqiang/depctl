@@ -21,20 +21,20 @@ A powerful, fast, and reliable remote deployment tool for modern applications. D
 
 ```bash
 git clone https://github.com/chihqiang/depctl.git
-cd depctl && go build -o depctl
+cd depctl && go build
 ```
 
 ## Quick Start
 
 ```bash
 # Deploy to multiple hosts
-depctl publish --hosts "root:123456@127.0.0.1:8022" --dir . --version "v1.0.0"
+depctl --hosts "root:123456@127.0.0.1:8022" publish --dir . --version "v1.0.0"
 
 # View deployment history
 depctl --hosts "root:123456@127.0.0.1:8022" history
 
 # Rollback to previous version
-depctl rollback --hosts "root:123456@127.0.0.1:8022" --version "v1.0.0"
+depctl --hosts "root:123456@127.0.0.1:8022" rollback --version "v1.0.0"
 ```
 
 ## Commands

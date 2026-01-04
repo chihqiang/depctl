@@ -30,19 +30,24 @@ func History() *cli.Command {
 			for _, config := range hostConfig {
 				// 3.1 Open SSH connection
 				sshClient, err := sshx.Open(config)
-				defer sshClient.Close() // Ensure connection is closed
 				if err != nil {
 					logx.Warn("[%s] Failed to open SSH connection: %v", config.Host, err)
 					continue
 				}
+				defer sshClient.Close()
+				sftpClient, err := sshx.OpenSftp(sshClient)
+				if err != nil {
+					logx.Warn("[%s] create sftp client: %v", config.Host, err)
+					continue
+				}
+				defer sftpClient.Close()
 				// 3.2 List remote directory file information
 				// Parameters read from CLI command FlagRemoteRepo and FlagCurrentLink
-				list, err := sshx.List(sshClient, command.String(flagx.FlagRemoteRepo), command.String(flagx.FlagCurrentLink))
+				list, err := sshx.List(sftpClient, command.String(flagx.FlagRemoteRepo), command.String(flagx.FlagCurrentLink))
 				if err != nil {
 					logx.Warn("[%s] list failed: %v", config.Host, err)
 					continue
 				}
-
 				// 3.3 Add each file information to the all map
 				for _, fi := range list {
 					all[fi.Path] = append(all[fi.Path], HostFileInfo{

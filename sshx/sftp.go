@@ -13,15 +13,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// IsSymlink determines whether the remote path is a symbolic link
-func IsSymlink(client *ssh.Client, remotePath string) (bool, error) {
-	// 1. Create SFTP client
-	sftpClient, err := sftp.NewClient(client)
-	if err != nil {
-		return false, fmt.Errorf("create sftp client: %w", err)
-	}
-	defer sftpClient.Close()
+func OpenSftp(client *ssh.Client) (*sftp.Client, error) {
+	return sftp.NewClient(client)
+}
 
+// IsSymlink determines whether the remote path is a symbolic link
+func IsSymlink(sftpClient *sftp.Client, remotePath string) (bool, error) {
 	// 2. Get file information
 	fi, err := sftpClient.Lstat(remotePath)
 	if err != nil {
@@ -33,24 +30,13 @@ func IsSymlink(client *ssh.Client, remotePath string) (bool, error) {
 }
 
 // RemoteExists determines whether the remote path exists
-func RemoteExists(client *ssh.Client, remotePath string) bool {
-	sftpClient, err := sftp.NewClient(client)
-	if err != nil {
-		return false
-	}
-	defer sftpClient.Close()
-
-	_, err = sftpClient.Lstat(remotePath)
+func RemoteExists(sftpClient *sftp.Client, remotePath string) bool {
+	_, err := sftpClient.Lstat(remotePath)
 	return err == nil
 }
 
 // ReadLink reads the actual path that the remote symbolic link points to
-func ReadLink(client *ssh.Client, remotePath string) (string, error) {
-	sftpClient, err := sftp.NewClient(client)
-	if err != nil {
-		return "", fmt.Errorf("create sftp client: %w", err)
-	}
-	defer sftpClient.Close()
+func ReadLink(sftpClient *sftp.Client, remotePath string) (string, error) {
 	return sftpClient.ReadLink(remotePath)
 }
 
@@ -63,26 +49,17 @@ type FileInfo struct {
 }
 
 // List lists all file information under the remote directory and marks the current version link
-func List(client *ssh.Client, remotePath, linkPath string) ([]FileInfo, error) {
-	// 1. Create SFTP client
-	sftpClient, err := sftp.NewClient(client)
-	if err != nil {
-		return nil, fmt.Errorf("create sftp client: %w", err)
-	}
-	defer sftpClient.Close()
-
+func List(sftpClient *sftp.Client, remotePath, linkPath string) ([]FileInfo, error) {
 	// 2. Read the actual version directory that currentLink points to
 	linkRemotePath, err := sftpClient.ReadLink(linkPath)
 	if err != nil {
 		return nil, err
 	}
-
 	// 3. Read all files under the remote version directory
 	dirs, err := sftpClient.ReadDir(remotePath)
 	if err != nil {
 		return nil, err
 	}
-
 	// 4. Iterate through file list and encapsulate FileInfo
 	var fis []FileInfo
 	for _, dir := range dirs {
@@ -98,23 +75,15 @@ func List(client *ssh.Client, remotePath, linkPath string) ([]FileInfo, error) {
 }
 
 // Mkdir creates a directory on the remote server, creating it if it doesn't exist
-func Mkdir(client *ssh.Client, remotePath string) error {
-	// 1. Path safety check
+func Mkdir(sftpClient *sftp.Client, remotePath string) error {
+	//  Path safety check
 	if filepath.IsAbs(remotePath) && !strings.HasPrefix(remotePath, "/") {
 		return fmt.Errorf("unsupported path formats: %s", remotePath)
 	}
 	if strings.Contains(remotePath, "..") {
 		return fmt.Errorf("the path contains illegal characters: %s", remotePath)
 	}
-
-	// 2. Create SFTP client
-	sftpClient, err := sftp.NewClient(client)
-	if err != nil {
-		return fmt.Errorf("create sftp client: %w", err)
-	}
-	defer sftpClient.Close()
-
-	// 3. Check if remote path exists
+	// Check if remote path exists
 	stat, err := sftpClient.Lstat(remotePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -129,23 +98,17 @@ func Mkdir(client *ssh.Client, remotePath string) error {
 		}
 	}
 
-	// 4. Path exists but is not a directory
+	// Path exists but is not a directory
 	if !stat.IsDir() {
 		return fmt.Errorf("%s already exists and is not a directory", remotePath)
 	}
 
-	// 5. Directory already exists, return directly
+	// Directory already exists, return directly
 	return nil
 }
 
 // UploadFile uploads a local file to remote
-func UploadFile(client *ssh.Client, localPath, remotePath string) error {
-	// 1. Create SFTP client
-	sftpClient, err := sftp.NewClient(client)
-	if err != nil {
-		return fmt.Errorf("create sftp client: %w", err)
-	}
-	defer sftpClient.Close()
+func UploadFile(sftpClient *sftp.Client, localPath, remotePath string) error {
 
 	// 2. Open local file
 	srcFile, err := os.Open(localPath)

@@ -3,6 +3,7 @@ package depx
 import (
 	"chihqiang/depctl/sshx"
 	"fmt"
+	"github.com/pkg/sftp"
 	"path"
 	"path/filepath"
 
@@ -12,35 +13,36 @@ import (
 
 // PostDeployHost executes deployment on remote server
 func PostDeployHost(sshClient *ssh.Client, localTarGz string, config *Config) error {
-	// 1. Validate configuration parameters
+	// Validate configuration parameters
 	if err := config.Validate(); err != nil {
 		return err
 	}
-
-	// 2. Execute pre-deployment checks
-	if err := preDeployChecks(sshClient, config); err != nil {
+	sftpClient, err := sshx.OpenSftp(sshClient)
+	if err != nil {
+		return fmt.Errorf("create sftp client: %w", err)
+	}
+	defer sftpClient.Close()
+	// Execute pre-deployment checks
+	if err := preDeployChecks(sftpClient, config); err != nil {
 		return err
 	}
-
-	// 3. Ensure parent directory of currentLink exists
+	// Ensure parent directory of currentLink exists
 	// path.Dir returns the parent directory of a path, for example /data/app/current → /data/app
 	baseLinkDir := path.Dir(config.GetCurrentLink())
-	if err := sshx.Mkdir(sshClient, baseLinkDir); err != nil {
+	if err := sshx.Mkdir(sftpClient, baseLinkDir); err != nil {
 		return fmt.Errorf("failed to create base directory %s: %w", baseLinkDir, err)
 	}
 
-	// 4. Ensure version directory exists (for example /data/app/releases/v1.0.0)
-	if err := sshx.Mkdir(sshClient, config.GetVersionRemoteDir()); err != nil {
+	// Ensure version directory exists (for example /data/app/releases/v1.0.0)
+	if err := sshx.Mkdir(sftpClient, config.GetVersionRemoteDir()); err != nil {
 		return fmt.Errorf("version directory creation failed %s: %w", config.GetVersionRemoteDir(), err)
 	}
-
-	// 5. Upload archive to remote version directory
+	// Upload archive to remote version directory
 	remoteTar := path.Join(config.GetVersionRemoteDir(), filepath.Base(localTarGz))
-	if err := sshx.UploadFile(sshClient, localTarGz, remoteTar); err != nil {
+	if err := sshx.UploadFile(sftpClient, localTarGz, remoteTar); err != nil {
 		return fmt.Errorf("file upload failed : %w", err)
 	}
-
-	// 6. Extract uploaded tar.gz file and delete archive
+	// Extract uploaded tar.gz file and delete archive
 	// Use %q to automatically add quotes, preventing errors with spaces or special characters in paths
 	tarCmd := fmt.Sprintf(
 		"cd %q && tar xf %q && rm -f %q",
@@ -52,13 +54,13 @@ func PostDeployHost(sshClient *ssh.Client, localTarGz string, config *Config) er
 		return fmt.Errorf("decompression failed: %w", err)
 	}
 
-	// 7. Execute deployment hooks (pre-hook / post-hook) and update currentLink
+	// Execute deployment hooks (pre-hook / post-hook) and update currentLink
 	if err := ExecuteDeployHooks(sshClient, config); err != nil {
 		return fmt.Errorf("hook deployment failed: %w", err)
 	}
 
-	// 8. Post-deployment verification (ensure currentLink correctly points to new version)
-	if err := postDeployVerification(sshClient, config); err != nil {
+	//Post-deployment verification (ensure currentLink correctly points to new version)
+	if err := postDeployVerification(sftpClient, config); err != nil {
 		return fmt.Errorf("post-deployment verification failed.: %w", err)
 	}
 
@@ -94,9 +96,9 @@ func ExecuteDeployHooks(sshClient *ssh.Client, config *Config) error {
 }
 
 // preDeployChecks executes pre-deployment checks
-func preDeployChecks(sshClient *ssh.Client, config *Config) error {
+func preDeployChecks(sftpClient *sftp.Client, config *Config) error {
 	// Check if currentLink exists and is a symbolic link
-	isLink, err := sshx.IsSymlink(sshClient, config.GetCurrentLink())
+	isLink, err := sshx.IsSymlink(sftpClient, config.GetCurrentLink())
 	if err != nil {
 		return fmt.Errorf("symbolic link check failed %s: %w", config.GetCurrentLink(), err)
 	}
@@ -107,7 +109,7 @@ func preDeployChecks(sshClient *ssh.Client, config *Config) error {
 
 	// Check if version directory already exists to prevent overwriting existing versions
 	versionDir := config.GetVersionRemoteDir()
-	if sshx.RemoteExists(sshClient, versionDir) {
+	if sshx.RemoteExists(sftpClient, versionDir) {
 		return fmt.Errorf("version %s already exists. Please use a different version number or clear the old version first", config.Version)
 	}
 
@@ -115,9 +117,9 @@ func preDeployChecks(sshClient *ssh.Client, config *Config) error {
 }
 
 // postDeployVerification post-deployment verification
-func postDeployVerification(sshClient *ssh.Client, config *Config) error {
+func postDeployVerification(sftpClient *sftp.Client, config *Config) error {
 	// Read the symbolic link target of currentLink
-	actualTarget, err := sshx.ReadLink(sshClient, config.GetCurrentLink())
+	actualTarget, err := sshx.ReadLink(sftpClient, config.GetCurrentLink())
 	if err != nil {
 		return fmt.Errorf("failed to read symbolic link: %w", err)
 	}
