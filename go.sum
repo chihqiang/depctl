@@ -1,7 +1,7 @@
 github.com/chengxilo/virtualterm v1.0.4 h1:Z6IpERbRVlfB8WkOmtbHiDbBANU7cimRIof7mk9/PwM=
 github.com/chengxilo/virtualterm v1.0.4/go.mod h1:DyxxBZz/x1iqJjFxTFcr6/x+jSpqN0iwWCOK1q10rlY=
-github.com/chihqiang/logx v0.0.0-20251218085236-fa4e219d0ac9 h1:Si1zXWNQD67AGY//bDPUZybiapjwDah+JuKsWSkx4UI=
-github.com/chihqiang/logx v0.0.0-20251218085236-fa4e219d0ac9/go.mod h1:Ti/Rm0FhuaMqMwaTkKBUXf42PTwhjJPXbqebcIVfWU8=
+github.com/chihqiang/logx v0.1.0 h1:fi0RveDp5uPGv03JOfMV8604wQ4/7i92se7nHsBKZCI=
+github.com/chihqiang/logx v0.1.0/go.mod h1:Ti/Rm0FhuaMqMwaTkKBUXf42PTwhjJPXbqebcIVfWU8=
 github.com/clipperhouse/stringish v0.1.1 h1:+NSqMOr3GR6k1FdRhhnXrLfztGzuG+VuFDfatpWHKCs=
 github.com/clipperhouse/stringish v0.1.1/go.mod h1:v/WhFtE1q0ovMta2+m+UbpZ+2/HEXNWYXQgCt4hdOzA=
 github.com/clipperhouse/uax29/v2 v2.3.0 h1:SNdx9DVUqMoBuBoW3iLOj4FQv3dN5mDtuqwuhIGpJy4=

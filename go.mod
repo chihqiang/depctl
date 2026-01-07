@@ -3,7 +3,7 @@ module chihqiang/depctl
 go 1.23.12
 
 require (
-	github.com/chihqiang/logx v0.0.0-20251218085236-fa4e219d0ac9
+	github.com/chihqiang/logx v0.1.0
 	github.com/pkg/sftp v1.13.10
 	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/urfave/cli/v3 v3.6.1
